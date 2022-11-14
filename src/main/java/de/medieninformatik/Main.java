@@ -8,12 +8,17 @@ public class Main {
 
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket("192.168.43.26", 6000)) {
+        try (Socket socket = new Socket("localhost", 6000)) {
             //Streams
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.flush();
 
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            boolean suc = (Boolean) ois.readObject();
+            if (!suc) {
+                System.err.println("Host denied access.");
+                return;
+            }
             System.out.println("Connected to " + socket.getInetAddress().getHostName());
 
             //Eingabe für Client
@@ -23,15 +28,13 @@ public class Main {
             Thread read = new Thread(() -> {
                 do {
                     try {
-                        String s = (String) ois.readObject();
+                        Message s = (Message) ois.readObject();
                         System.out.println(s);
                     } catch (IOException e) {
                         System.err.println("Host disconnected.");
-                        e.printStackTrace();
                         break;
                     } catch (ClassNotFoundException e) {
-                        System.err.println("Host disconnected.");
-                        e.printStackTrace();
+                        System.err.println("Unknown Input received.");
                         break;
                     }
                 } while (true);
@@ -43,13 +46,15 @@ public class Main {
 
             //Schreiben
             do {
-                String text = scanner.nextLine();
-                oos.writeObject(user + ": " + text);
+                Message m = new Message(scanner.nextLine());
+                oos.writeObject(m);
             } while (true);
         } catch (SocketException | UnknownHostException e) {
             System.err.println("Host disconnected.");
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            System.err.println("Received wrong input.");
         }
     }
 }
