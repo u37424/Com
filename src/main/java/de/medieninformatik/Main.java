@@ -19,9 +19,11 @@ public class Main {
             System.out.println("Connected to "+socket.getInetAddress().getHostName());
 
             Scanner scanner = new Scanner(System.in);
+            System.out.println("Username? ");
+            String user = scanner.nextLine();
             do {
                 String text = scanner.nextLine();
-                oos.writeObject(text);
+                oos.writeObject(user+": "+text);
                 String received = (String) ois.readObject();
                 System.out.println(received);
             } while (true);
